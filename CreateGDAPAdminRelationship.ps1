@@ -168,7 +168,7 @@ function LoadMainMenuSystem(){
         Start-Sleep -s 1
         ARStatus
         }
-        10 {Write-Host "`n`tYou selected Show Log`n" -ForegroundColor Yellow
+        10 {Write-Host "`n`tYou selected Show Log - '$($logpath)\LogFile.csv'`n" -ForegroundColor Yellow
         Start-Sleep -s 3
         ShowLog}
         11 {Exit}
