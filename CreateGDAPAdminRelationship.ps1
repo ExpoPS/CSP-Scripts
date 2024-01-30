@@ -13,7 +13,7 @@ NEEDS -
 #>
 
 $script:logpath = "C:\Temp\GDAP"
-$script:year = "2023"
+$script:year = "2024"
 
 
 #Check Temp Folder Exists
@@ -30,21 +30,21 @@ function ConnectModules(){
     try {$Module = Get-MgContext -ErrorAction SilentlyContinue}
     catch {}
     If (!$Module){
-    $Mod = Get-Module -ListAvailable -Name "Microsoft.Graph.Identity.Partner"
-    Write-Host "`nNot connected to Microsoft.Graph.Identity.Partner, Connecting..." -ForegroundColor Yellow
+    $Mod = Get-Module -ListAvailable -Name "Microsoft.Graph.Beta.Identity.Partner"
+    Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
     If (!$Mod)
     {
-        Write-Host "`nMicrosoft.Graph.Identity.Partner Module is not present, attempting to install it"
+        Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner Module is not present, attempting to install it"
         
-        Install-Module -Name Microsoft.Graph.Identity.Partner -Scope CurrentUser
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups" -ErrorAction SilentlyContinue
+        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner -Scope CurrentUser
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups" -ErrorAction SilentlyContinue
 
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
     }else {
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
             }
         }ElseIf($Module){
-    Write-Host "`nMicrosoft.Graph.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}    
+    Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}    
     
     #Connect to PartnerCenter
     try {$Module2 = Get-PartnerOrganizationProfile -ErrorAction SilentlyContinue}
@@ -220,10 +220,14 @@ function CheckforCustomer(){
 
 function ARStatus(){
     $relationships = ""
-    $relationships = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'"
+try {
+    $relationships = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'"   
+}
+catch {
+    Write-Host "`nThe Customer '$($customer.Name)' has no Admin Relationships" -ForegroundColor Red
+}
 
     if(!$relationships){
-        Write-Host "`nThe Customer '$($customer.Name)' has no Admin Relationships" -ForegroundColor Red
     }else{
     ForEach ($relationship in $relationships){
         Write-Host "`nThe Admin Relationship '$($relationship.DisplayName)' Status is " -NoNewline;if($relationship.Status -eq "active"){Write-Host "'$($relationship.Status)'" -ForegroundColor Green -NoNewline}if($relationship.Status -match  "created|approvalpending"){Write-Host "'$($relationship.Status)'" -ForegroundColor Yellow -NoNewline}if($relationship.Status -match "expired|terminated"){Write-Host "'$($relationship.Status)'" -ForegroundColor Red -NoNewline}
@@ -243,7 +247,11 @@ function CreateGDAPSROnly(){
     $name = "GDAP_$($year)_SROnly_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    try {
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"  
+    }
+    catch {}
+        if ($rel){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -264,13 +272,13 @@ function CreateGDAPSROnly(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -287,7 +295,7 @@ function CreateGDAPSROnly(){
     $name = "GDAP_$($year)_ReadOnly_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -307,13 +315,13 @@ function CreateGDAPSROnly(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -333,7 +341,7 @@ function CreateGDAPTCaaS(){
     $name = "GDAP_$($year)_TCaaS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
  
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{   
@@ -359,13 +367,13 @@ function CreateGDAPTCaaS(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
         }
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -379,7 +387,7 @@ function CreateGDAPTCaaS(){
     $name = "GDAP_$($year)_UCTeam_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -399,13 +407,13 @@ function CreateGDAPTCaaS(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -428,7 +436,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_EndUser_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -463,13 +471,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -487,7 +495,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_1stLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -522,13 +530,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -547,7 +555,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-    if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -582,13 +590,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -614,7 +622,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_3rdLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -670,13 +678,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -702,7 +710,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_PS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -758,13 +766,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -778,7 +786,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_GA_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -797,13 +805,13 @@ function CreateGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
     $params = @{
         action = "lockForApproval"
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
     Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -820,9 +828,9 @@ function AssignGDAPSROnly(){
         
         $name = "GDAP_$($year)_SROnly_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-        $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
         $delegatedAdminRelationshipId = $rel.id
-        $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+        $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
         if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -843,7 +851,7 @@ function AssignGDAPSROnly(){
             }
         }
         
-        New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+        New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
     
         Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
         Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -859,9 +867,9 @@ function AssignReadOnly(){
         
         $name = "GDAP_$($year)_ReadOnly_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-        $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
         $delegatedAdminRelationshipId = $rel.id
-        $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+        $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
         if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -881,7 +889,7 @@ function AssignReadOnly(){
             }
         }
         
-        New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+        New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
             
         Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
         Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -900,9 +908,9 @@ function AssignGDAPTCaaS(){
     
     $name = "GDAP_$($year)_TCaaS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
     Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -927,7 +935,7 @@ function AssignGDAPTCaaS(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -940,9 +948,9 @@ function AssignGDAPTCaaS(){
     
     $name = "GDAP_$($year)_UCTeam_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
     Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -962,7 +970,7 @@ function AssignGDAPTCaaS(){
         }
     }
     
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
     
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1012,9 +1020,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_EndUser_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1048,7 +1056,7 @@ function AssignGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1066,9 +1074,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_1stLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1102,7 +1110,7 @@ function AssignGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1120,9 +1128,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1156,7 +1164,7 @@ function AssignGDAPM365Managed(){
             )
         }
     }
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1181,9 +1189,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_3rdLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1239,7 +1247,7 @@ function AssignGDAPM365Managed(){
         }
     }
 
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1264,9 +1272,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_PS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1322,7 +1330,7 @@ function AssignGDAPM365Managed(){
         }
     }
 
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
@@ -1335,9 +1343,9 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_GA_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
     $delegatedAdminRelationshipId = $rel.id
-    $relassignment = Get-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
     if ($relassignment){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
@@ -1357,7 +1365,7 @@ function AssignGDAPM365Managed(){
         }
     }
 
-    New-MgTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
 
     Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
     Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
