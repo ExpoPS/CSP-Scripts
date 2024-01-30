@@ -27,7 +27,8 @@ function ConnectModules(){
     #Check that PowerShell modules are loaded
     
     #Connect to MgGraph
-    $Module = Get-MgContext -ErrorAction SilentlyContinue
+    try {$Module = Get-MgContext -ErrorAction SilentlyContinue}
+    catch {}
     If (!$Module){
     $Mod = Get-Module -ListAvailable -Name "Microsoft.Graph.Identity.Partner"
     Write-Host "`nNot connected to Microsoft.Graph.Identity.Partner, Connecting..." -ForegroundColor Yellow
@@ -36,7 +37,8 @@ function ConnectModules(){
         Write-Host "`nMicrosoft.Graph.Identity.Partner Module is not present, attempting to install it"
         
         Install-Module -Name Microsoft.Graph.Identity.Partner -Scope CurrentUser
-        Import-Module Microsoft.Graph.Identity.Partner,Microsoft.Graph.Groups -ErrorAction SilentlyContinue
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups" -ErrorAction SilentlyContinue
+
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
     }else {
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
@@ -45,7 +47,8 @@ function ConnectModules(){
     Write-Host "`nMicrosoft.Graph.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}    
     
     #Connect to PartnerCenter
-    $Module2 = Get-PartnerOrganizationProfile -ErrorAction SilentlyContinue
+    try {$Module2 = Get-PartnerOrganizationProfile -ErrorAction SilentlyContinue}
+    catch {}
     If (!$Module2){
     $Mod = Get-Module -ListAvailable -Name "PartnerCenter"
     Write-Host "`nNot connected to PartnerCenter, Connecting..." -ForegroundColor Yellow
@@ -54,7 +57,7 @@ function ConnectModules(){
         Write-Host "`nPartnerCenter Module is not present, attempting to install it"
         
         Install-Module -Name PartnerCenter -Scope CurrentUser
-        Import-Module PartnerCenter -ErrorAction SilentlyContinue
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
     }else {
         Connect-PartnerCenter
@@ -979,7 +982,7 @@ function AssignGDAPM365Managed(){
     $msgboxInput=[System.Windows.MessageBox]::Show($msgBody,$msgTitle,$msgButton,$msgImage)
     switch ($msgboxInput) {    
         'Yes' {  
-    $CustomerCode = TextBox "Enter the Customer Code i.e CUS123"  
+    $CustomerCode = TextBox "Enter Customer Code i.e CUS123"  
 
     $Group = (Get-MgGroup -Filter "DisplayName eq 'PAG-GDAP-$($CustomerCode)-GlobalAdmin'")
     if ($Group) {
@@ -1411,9 +1414,9 @@ function BlankFunction(){
         
             ### Putting a label above the text box
             $label = New-Object System.Windows.Forms.Label
-            $label.Location = New-Object System.Drawing.Point(60,10)
+            $label.Location = New-Object System.Drawing.Point(10,10)
             $label.AutoSize = $True
-            $Font = New-Object System.Drawing.Font("Arial",10,[System.Drawing.FontStyle]::Bold)
+            $Font = New-Object System.Drawing.Font("Arial",10)
             $label.Font = $Font
             $label.Text = $text
             $form.Controls.Add($label)
