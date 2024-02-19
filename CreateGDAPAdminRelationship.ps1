@@ -431,6 +431,7 @@ function CreateGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating End User Admin Relationship" -PercentComplete 15
     
     $name = "GDAP_$($year)_EndUser_$($customer.Name.replace(' ',''))"
@@ -468,6 +469,9 @@ function CreateGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
             )
         }
     }
@@ -489,6 +493,7 @@ function CreateGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 1st Line Admin Relationship" -PercentComplete 30
     
@@ -527,6 +532,9 @@ function CreateGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
             )
         }
     }
@@ -549,6 +557,7 @@ function CreateGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 2nd Line Admin Relationship" -PercentComplete 45
     
@@ -586,6 +595,9 @@ function CreateGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
+                }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
             )
         }
@@ -1016,6 +1028,8 @@ function AssignGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
+
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning End User Admin Relationship" -PercentComplete 15
     
     $name = "GDAP_$($year)_EndUser_$($customer.Name.replace(' ',''))"
@@ -1053,6 +1067,9 @@ function AssignGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
             )
         }
     }
@@ -1069,6 +1086,7 @@ function AssignGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 1st Line Admin Relationship" -PercentComplete 30
     
@@ -1107,6 +1125,9 @@ function AssignGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
             )
         }
     }
@@ -1123,6 +1144,7 @@ function AssignGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        ##Helpdesk Administrator
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 2nd Line Admin Relationship" -PercentComplete 45
     
@@ -1160,6 +1182,9 @@ function AssignGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
+                }
+                @{
+                    roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
             )
         }
