@@ -8,12 +8,14 @@
 Stuart Fordham
 Change Log
 V1.0, 02/11/2023 Initial Version
+V
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2024"
+$script:version = "1.1"
 
 
 #Check Temp Folder Exists
@@ -73,12 +75,12 @@ function ConnectModules(){
 function LoadMainMenuSystem(){
     do{
 	[INT]$xMenu1 = 0
-	while ( $xMenu1 -lt 1 -or $xMenu1 -gt 11 ){
+	while ( $xMenu1 -lt 1 -or $xMenu1 -gt 13 ){
 		Clear-Host
 		#… Present the Menu Options
         Write-Host "`n"
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen
-		Write-Host "`t*        Exponential-e CSP GDAP Script        *" -ForegroundColor DarkGreen
+		Write-Host "`t*     Exponential-e CSP GDAP Script - v1.1    *" -ForegroundColor DarkGreen
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen
 		Write-Host "`t*" -Fore DarkGreen -NoNewline;Write-Host "    Ensure you connect to PowerShell first   " -ForegroundColor Red -NoNewline;Write-Host "*" -Fore DarkGreen
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen
@@ -102,9 +104,15 @@ function LoadMainMenuSystem(){
         Write-Host ""       
         Write-Host "`t-----------------------------------------------" -ForegroundColor DarkGreen
         Write-Host ""
-        Write-Host "`t`t9. Check Admin Relationship Status" -Fore DarkBlue
-        Write-Host "`t`t10. Show Log" -Fore Blue
-        Write-Host "`t`t11. Quit`n" -Fore DarkRed
+        Write-Host "`tCSOC - Create/Assign GDAP Admin Relationship`n" -Fore DarkYellow
+        Write-Host "`t`t9. Create - CSOC GDAP" -Fore White
+        Write-Host "`t`t10. Assign - CSOC GDAP" -Fore White
+        Write-Host ""       
+        Write-Host "`t-----------------------------------------------" -ForegroundColor DarkGreen
+        Write-Host ""           
+        Write-Host "`t`t11. Check Admin Relationship Status" -Fore DarkBlue
+        Write-Host "`t`t12. Show Log" -Fore Blue
+        Write-Host "`t`t13. Quit`n" -Fore DarkRed
         
         #… Retrieve the response from the user
         [int]$xMenu1 = Read-Host "`t`tEnter Menu Option Number"}
@@ -166,15 +174,29 @@ function LoadMainMenuSystem(){
         Write-Host "`nAssigning Admin Relationships Complete" -ForegroundColor Green
         AnyKey
         }
-        9 {Write-Host "`n`tCheck Admin Relationship Status" -ForegroundColor Yellow
+        9 {Write-Host "`n`tCreate - CSOC GDAP" -ForegroundColor Yellow
+        CheckforCustomer
+        Start-Sleep -s 3
+        CreateGDAPCSOC
+        Write-Host "`nAssigning Admin Relationships Complete" -ForegroundColor Green
+        AnyKey
+        }
+        10 {Write-Host "`n`tAssign - CSOC GDAP" -ForegroundColor Yellow
+        CheckforCustomer
+        Start-Sleep -s 3
+        AssignGDAPCSOC
+        Write-Host "`nAssigning Admin Relationships Complete" -ForegroundColor Green
+        AnyKey
+        }
+        11 {Write-Host "`n`tCheck Admin Relationship Status" -ForegroundColor Yellow
         CheckforCustomer
         Start-Sleep -s 1
         ARStatus
         }
-        10 {Write-Host "`n`tYou selected Show Log - '$($logpath)\LogFile.csv'`n" -ForegroundColor Yellow
+        12 {Write-Host "`n`tYou selected Show Log - '$($logpath)\LogFile.csv'`n" -ForegroundColor Yellow
         Start-Sleep -s 3
         ShowLog}
-        11 {Exit}
+        13 {Exit}
 	}
 } while ( $userMenuChoice -ne 11 )
 }
@@ -422,6 +444,51 @@ function CreateGDAPTCaaS(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Completed
     }
+
+    function CreateGDAPCSOC(){
+
+        #CSOC
+        ## Security Reader
+    
+        Write-Progress -Activity "Creating Admin Relationship" -Status "Creating CSOC Admin Relationship" -PercentComplete 0
+        
+        $name = "GDAP_$($year)_CSOC_$($customer.Name.replace(' ',''))"
+        $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
+     
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"){
+            Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
+            Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
+            }else{   
+        $params = @{
+            displayName = "$($AdminRelationshipName)"
+            duration = "P730D"
+            autoExtendDuration = "P180D"
+            customer = @{
+                tenantId = "$($customer.CustomerId)"
+                displayName = "$($customer.Name)"
+            }
+            accessDetails = @{
+                unifiedRoles = @(
+                    @{
+                        roleDefinitionId = "5d6b6bb7-de71-4623-b4af-96380a352509"
+                    }
+
+                )
+            }
+        }
+        New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
+    
+        $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'").Id
+        $params = @{
+            action = "lockForApproval"
+        }
+        New-MgBetaTenantRelationshipDelegatedAdminRelationshipRequest -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+            }
+        Write-Host "`nCreated Admin Relationship - $($AdminRelationshipName), please copy the following link and send to customer for approval -" -NoNewline; Write-Host "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)" -ForegroundColor Yellow
+        Write-Log -Message "Created Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
+    
+        Write-Progress -Activity "Creating Admin Relationship" -Completed
+        }
 
 function CreateGDAPM365Managed(){
     #End User Support
@@ -990,6 +1057,46 @@ function AssignGDAPTCaaS(){
     #>
     Write-Progress -Activity "Creating Admin Relationship" -Completed
     }
+
+    function AssignGDAPCSOC(){
+
+        #CSOC
+        ## License administrator
+        ## Service support administrator
+        ## Teams Administrator
+    
+        Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning CSOC Admin Relationship" -PercentComplete 50
+        
+        $name = "GDAP_$($year)_CSOC_$($customer.Name.replace(' ',''))"
+        $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
+        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'"
+        $delegatedAdminRelationshipId = $rel.id
+        $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
+    
+        if ($relassignment){
+        Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' is already assigned roles, Skipping" -ForegroundColor Yellow
+        Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' is already assigned roles" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
+        }else{
+        $params = @{
+            accessContainer = @{
+                accessContainerId = "1d62d2b7-103d-4d52-9eee-9105b8948e94"
+                accessContainerType = "securityGroup"
+            }
+            accessDetails = @{
+                unifiedRoles = @(
+                    @{
+                        roleDefinitionId = "5d6b6bb7-de71-4623-b4af-96380a352509"
+                    }
+                )
+            }
+        }
+        New-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $delegatedAdminRelationshipId -BodyParameter $params | Out-Null
+    
+        Write-Host "`nAssigned Permissions to Admin Relationship - $($AdminRelationshipName)" -ForegroundColor White
+        Write-Log -Message "Assigned Permissions to Admin Relationship - $($AdminRelationshipName)" -Severity "Information" -Process "$($customer.Name)" -Object "https://admin.microsoft.com/AdminPortal/Home#/partners/invitation/granularAdminRelationships/$($delegatedAdminRelationshipId)"
+    }
+        Write-Progress -Activity "Creating Admin Relationship" -Completed
+        }
 
 function AssignGDAPM365Managed(){
 
