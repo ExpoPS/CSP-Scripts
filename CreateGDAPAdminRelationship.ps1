@@ -38,8 +38,8 @@ function ConnectModules(){
     {
         Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner Module is not present, attempting to install it"
         
-        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner -Scope CurrentUser
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups" -ErrorAction SilentlyContinue
+        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner, Microsoft.Graph.Groups, Microsoft.Graph.Authentication -Scope CurrentUser
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication" -ErrorAction SilentlyContinue
 
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
     }else {
@@ -1111,7 +1111,7 @@ function AssignGDAPM365Managed(){
         'Yes' {  
     $CustomerCode = TextBox "Enter Customer Code i.e CUS123"  
 
-    $Group = (Get-MgGroup -Filter "DisplayName eq 'PAG-GDAP-$($CustomerCode)-GlobalAdmin'")
+    $Group = (Get-MgBetaGroup -Filter "DisplayName eq 'PAG-GDAP-$($CustomerCode)-GlobalAdmin'")
     if ($Group) {
         $GAGroupID = $Group.ID
     } else {
