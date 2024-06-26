@@ -31,26 +31,28 @@ function ConnectModules(){
     #Connect to MgGraph
     try {$Module = Get-MgContext -ErrorAction SilentlyContinue}
     catch {}
-    If (!$Module){
-    $Mod = Get-Module -ListAvailable -Name "Microsoft.Graph.Beta.Identity.Partner"
+    If ($Module){Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}
+    ElseIf (!$Module){
+    $Mod = Get-Module -ListAvailable
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
-    If (!$Mod)
+    If ($Mod -ne "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication")
     {
-        Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner Module is not present, attempting to install it"
+        Write-Host "`nSome Modules aren't present, attempting to install them" -ForegroundColor Yellow
         
-        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner, Microsoft.Graph.Groups, Microsoft.Graph.Authentication -Scope CurrentUser
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication" -ErrorAction SilentlyContinue
+        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner, Microsoft.Graph.Groups, Microsoft.Graph.Authentication -Scope CurrentUser -Force
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication" -ErrorAction SilentlyContinue
 
-        Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
-    }else {
-        Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose
+        Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
+    }elseif ($Mod -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
+        Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
             }
         }ElseIf($Module){
-    Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}    
+    
     
     #Connect to PartnerCenter
     try {$Module2 = Get-PartnerOrganizationProfile -ErrorAction SilentlyContinue}
     catch {}
+    If ($Module2){Write-Host "`nPartnerCenter is already connected for $($Module2.CompanyName)" -ForegroundColor Green}
     If (!$Module2){
     $Mod = Get-Module -ListAvailable -Name "PartnerCenter"
     Write-Host "`nNot connected to PartnerCenter, Connecting..." -ForegroundColor Yellow
@@ -58,19 +60,16 @@ function ConnectModules(){
     {
         Write-Host "`nPartnerCenter Module is not present, attempting to install it"
         
-        Install-Module -Name PartnerCenter -Scope CurrentUser
+        Install-Module -Name PartnerCenter -Scope CurrentUser -Force
         Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
     }else {
         Connect-PartnerCenter
             }
-        }ElseIf($Module2){
-    Write-Host "`nPartnerCenter is already connected for $($Module2.CompanyName)" -ForegroundColor Green}    
-
-
-    $script:customertable = Get-PartnerCustomer
+        }    
     
     Start-Sleep -Seconds 3
+}
 }
 function LoadMainMenuSystem(){
     do{
@@ -202,6 +201,7 @@ function LoadMainMenuSystem(){
 }
 
 function CustomerSelection(){   
+
     if($customer){
         Add-Type -AssemblyName PresentationFramework
         $msgBody = "Customer '$($customer.Name)' already selected, would you like to change?"
@@ -223,6 +223,7 @@ function CustomerSelection(){
             }
         }
     }else{
+        $script:customertable = Get-PartnerCustomer
         Write-Host "`nSelect the customer from the table"
         Start-Sleep -Seconds 2
         
@@ -1111,7 +1112,7 @@ function AssignGDAPM365Managed(){
         'Yes' {  
     $CustomerCode = TextBox "Enter Customer Code i.e CUS123"  
 
-    $Group = (Get-MgBetaGroup -Filter "DisplayName eq 'PAG-GDAP-$($CustomerCode)-GlobalAdmin'")
+    $Group = (Get-MgGroup -Filter "DisplayName eq 'PAG-GDAP-$($CustomerCode)-GlobalAdmin'")
     if ($Group) {
         $GAGroupID = $Group.ID
     } else {
