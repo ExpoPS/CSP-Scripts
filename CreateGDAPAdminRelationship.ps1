@@ -8,14 +8,15 @@
 Stuart Fordham
 Change Log
 V1.0, 02/11/2023 Initial Version
-V
+V1.1, 30/07/2024 Added CSOC to Script
+V1.2, 22/08/2024 Fixed closing bracket on $module
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2024"
-$script:version = "1.1"
+$script:version = "1.2"
 
 
 #Check Temp Folder Exists
@@ -35,7 +36,7 @@ function ConnectModules(){
     ElseIf (!$Module){
     $Mod = Get-Module -ListAvailable
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
-    If ($Mod -ne "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication")
+    If ("Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication" -ne $Mod.Name)
     {
         Write-Host "`nSome Modules aren't present, attempting to install them" -ForegroundColor Yellow
         
@@ -46,7 +47,7 @@ function ConnectModules(){
     }elseif ($Mod -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
             }
-        }ElseIf($Module){
+        }ElseIf($Module){}
     
     
     #Connect to PartnerCenter
@@ -69,7 +70,6 @@ function ConnectModules(){
         }    
     
     Start-Sleep -Seconds 3
-}
 }
 function LoadMainMenuSystem(){
     do{
