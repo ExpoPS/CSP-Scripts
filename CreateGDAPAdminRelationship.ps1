@@ -34,7 +34,7 @@ function ConnectModules(){
     catch {}
     If ($Module){Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}
     ElseIf (!$Module){
-    $Mod = Get-Module -ListAvailable
+    $Mod = Get-InstalledModule
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
     If ("Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication" -ne $Mod.Name)
     {
@@ -45,6 +45,7 @@ function ConnectModules(){
 
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
     }elseif ($Mod -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication"
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
             }
         }ElseIf($Module){}
@@ -55,7 +56,7 @@ function ConnectModules(){
     catch {}
     If ($Module2){Write-Host "`nPartnerCenter is already connected for $($Module2.CompanyName)" -ForegroundColor Green}
     If (!$Module2){
-    $Mod = Get-Module -ListAvailable -Name "PartnerCenter"
+    $Mod = Get-InstalledModule -Name "PartnerCenter"
     Write-Host "`nNot connected to PartnerCenter, Connecting..." -ForegroundColor Yellow
     If (!$Mod)
     {
@@ -65,6 +66,7 @@ function ConnectModules(){
         Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
     }else {
+        Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
             }
         }    
