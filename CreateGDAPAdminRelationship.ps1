@@ -82,7 +82,7 @@ function LoadMainMenuSystem(){
 		#… Present the Menu Options
         Write-Host "`n"
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen
-		Write-Host "`t*     Exponential-e CSP GDAP Script - v1.1    *" -ForegroundColor DarkGreen
+		Write-Host "`t*     Exponential-e CSP GDAP Script - v$($version)    *" -ForegroundColor DarkGreen
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen
 		Write-Host "`t*" -Fore DarkGreen -NoNewline;Write-Host "    Ensure you connect to PowerShell first   " -ForegroundColor Red -NoNewline;Write-Host "*" -Fore DarkGreen
         Write-Host "`t***********************************************" -ForegroundColor DarkGreen

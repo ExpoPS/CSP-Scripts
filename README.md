@@ -1,3 +1,3 @@
 # GDAP - Create Admin Relationship
 
-![image](https://github.com/ExpoPS/CSP-Scripts/assets/45593412/3e703106-ec2e-46f3-bee9-848bec933319)
+![image](https://github.com/user-attachments/assets/5fefabf2-4e78-4871-afed-bad35fb0cd42)
