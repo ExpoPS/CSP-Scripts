@@ -11,6 +11,7 @@ V1.0, 02/11/2023 Initial Version
 V1.1, 30/07/2024 Added CSOC to Script
 V1.2, 22/08/2024 Fixed closing bracket on $module
 V1.3, 06/01/2025 Added TDA's
+V1.4, 16/01/2025 Added Extra Permissions
 NEEDS - 
 
 #>
@@ -334,11 +335,11 @@ function CreateGDAPSROnly(){
     }
 
     function CreateBillingAdmin(){
-   #ReadOnly
+   #BillingAdmin
     ## Billing Administrator
-    Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Read Only Admin Relationship" -PercentComplete 50
+    Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Billing Admin Admin Relationship" -PercentComplete 50
     
-    $name = "GDAP_$($year)_ReadOnly_$($customer.Name.replace(' ',''))"
+    $name = "GDAP_$($year)_BillingAdmin_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
@@ -694,6 +695,10 @@ function CreateGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        #Compliance Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
+        #Application Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 2nd Line Admin Relationship" -PercentComplete 45
     
@@ -735,6 +740,18 @@ function CreateGDAPM365Managed(){
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
+                @{
+                    roleDefinitionId = "17315797-102d-40b4-93e0-432062caca18"
+                }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
+                }
+                @{
+                    roleDefinitionId = "9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3"
+                }
             )
         }
     }
@@ -764,6 +781,8 @@ function CreateGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 3rd Line Admin Relationship" -PercentComplete 60
     
@@ -823,6 +842,12 @@ function CreateGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
+                }
             )
         }
     }
@@ -852,6 +877,8 @@ function CreateGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Professional Service Admin Relationship" -PercentComplete 75
     
@@ -910,6 +937,12 @@ function CreateGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
+                }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
                 }
             )
         }
@@ -1009,11 +1042,11 @@ function AssignGDAPSROnly(){
     }
 
 function AssignBillingAdmin(){
- #ReadOnly
+ #BillingAdmin
         ## Billing Administrator
-        Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning Read Only Admin Relationship" -PercentComplete 50
+        Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning Billing Admin Admin Relationship" -PercentComplete 50
         
-        $name = "GDAP_$($year)_ReadOnly_$($customer.Name.replace(' ',''))"
+        $name = "GDAP_$($year)_BillingAdmin_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
@@ -1186,13 +1219,13 @@ function AssignGDAPTCaaS(){
         }else{
         $params = @{
             accessContainer = @{
-                accessContainerId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
+                accessContainerId = "3f1c7b7c-201c-453e-9dbc-d73f6d6978b0"
                 accessContainerType = "securityGroup"
             }
             accessDetails = @{
                 unifiedRoles = @(
                     @{
-                        roleDefinitionId = "3f1c7b7c-201c-453e-9dbc-d73f6d6978b0"
+                        roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
                     }
                 )
             }
@@ -1359,6 +1392,10 @@ function AssignGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        #Compliance Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
+        #Application Administrator
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 2nd Line Admin Relationship" -PercentComplete 45
     
@@ -1400,6 +1437,18 @@ function AssignGDAPM365Managed(){
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
+                @{
+                    roleDefinitionId = "17315797-102d-40b4-93e0-432062caca18"
+                }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
+                }
+                @{
+                    roleDefinitionId = "9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3"
+                }
             )
         }
     }
@@ -1423,6 +1472,8 @@ function AssignGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 3rd Line Admin Relationship" -PercentComplete 60
     
@@ -1482,6 +1533,12 @@ function AssignGDAPM365Managed(){
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
                 }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
+                }
             )
         }
     }
@@ -1506,6 +1563,8 @@ function AssignGDAPM365Managed(){
         ##Teams Administrator
         ##User Administrator
         ##Authentication Administrator
+        #Dynamics 365 Administrator
+        #Power Platform Administrator
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Professional Service Admin Relationship" -PercentComplete 75
     
@@ -1564,6 +1623,12 @@ function AssignGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "c4e39bd9-1100-46d3-8c65-fb160da0071f"
+                }
+                @{
+                    roleDefinitionId = "44367163-eba1-44c3-98af-f5787879f96a"
+                }
+                @{
+                    roleDefinitionId = "11648597-926c-4cf3-9c36-bcebb0ba8dcc"
                 }
             )
         }
