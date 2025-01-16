@@ -18,7 +18,7 @@ NEEDS -
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2025"
-$script:version = "1.3"
+$script:version = "1.4"
 
 
 #Check Temp Folder Exists
