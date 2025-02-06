@@ -12,13 +12,14 @@ V1.1, 30/07/2024 Added CSOC to Script
 V1.2, 22/08/2024 Fixed closing bracket on $module
 V1.3, 06/01/2025 Added TDA's
 V1.4, 16/01/2025 Added Extra Permissions
+V1.5, 06/02/2025 Improved Module Checks
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2025"
-$script:version = "1.4"
+$script:version = "1.5"
 
 
 #Check Temp Folder Exists
@@ -38,7 +39,7 @@ function ConnectModules(){
     ElseIf (!$Module){
     $Mod = Get-InstalledModule
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
-    If ("Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication" -ne $Mod.Name)
+    If (($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Authentication"))
     {
         Write-Host "`nSome Modules aren't present, attempting to install them" -ForegroundColor Yellow
         
@@ -532,7 +533,6 @@ function CreateGDAPTCaaS(){
         $params = @{
             displayName = "$($AdminRelationshipName)"
             duration = "P730D"
-            autoExtendDuration = "P180D"
             customer = @{
                 tenantId = "$($customer.CustomerId)"
                 displayName = "$($customer.Name)"
