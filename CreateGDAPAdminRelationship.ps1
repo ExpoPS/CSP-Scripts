@@ -496,7 +496,7 @@ function CreateGDAPTCaaS(){
             accessDetails = @{
                 unifiedRoles = @(
                     @{
-                        roleDefinitionId = "5d6b6bb7-de71-4623-b4af-96380a352509"
+                        roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
                     }
 
                 )
@@ -1187,7 +1187,7 @@ function AssignGDAPTCaaS(){
             accessDetails = @{
                 unifiedRoles = @(
                     @{
-                        roleDefinitionId = "5d6b6bb7-de71-4623-b4af-96380a352509"
+                        roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
                     }
                 )
             }
