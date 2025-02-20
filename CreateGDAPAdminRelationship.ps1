@@ -13,13 +13,14 @@ V1.2, 22/08/2024 Fixed closing bracket on $module
 V1.3, 06/01/2025 Added TDA's
 V1.4, 16/01/2025 Added Extra Permissions
 V1.5, 06/02/2025 Improved Module Checks
+V1.6, 20/02/2025 Fixed Module Checks
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2025"
-$script:version = "1.5"
+$script:version = "1.6"
 
 
 #Check Temp Folder Exists
@@ -31,7 +32,8 @@ if(!(Test-Path -Path $logpath)){
 
 function ConnectModules(){
     #Check that PowerShell modules are loaded
-    
+    $DocsPath = [Environment]::GetFolderPath("MyDocuments")
+
     #Connect to MgGraph
     try {$Module = Get-MgContext -ErrorAction SilentlyContinue}
     catch {}
@@ -39,16 +41,16 @@ function ConnectModules(){
     ElseIf (!$Module){
     $Mod = Get-InstalledModule
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
-    If (($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Authentication"))
+    If (($Mod.Name -notcontains "Microsoft.Graph.Beta.Identity.Partner") -or ($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Authentication"))
     {
         Write-Host "`nSome Modules aren't present, attempting to install them" -ForegroundColor Yellow
-        
-        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner, Microsoft.Graph.Groups, Microsoft.Graph.Authentication -Scope CurrentUser -Force
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication" -ErrorAction SilentlyContinue
 
+        Install-Module -Name Microsoft.Graph.Beta.Identity.Partner, Microsoft.Graph.Groups, Microsoft.Graph.Authentication -Scope CurrentUser -Force
+        Import-Module "$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Authentication" -ErrorAction SilentlyContinue
+        
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
-    }elseif ($Mod -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$home\Documents\WindowsPowerShell\Modules\Microsoft.Graph.Authentication"
+    }elseif ($Mod.Name -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
+        Import-Module "$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Authentication"
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
             }
         }ElseIf($Module){}
@@ -66,10 +68,10 @@ function ConnectModules(){
         Write-Host "`nPartnerCenter Module is not present, attempting to install it"
         
         Install-Module -Name PartnerCenter -Scope CurrentUser -Force
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
+        Import-Module "$DocsPath\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
     }else {
-        Import-Module "$home\Documents\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
+        Import-Module "$DocsPath\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
             }
         }    
@@ -322,7 +324,7 @@ function CreateGDAPSROnly(){
     }
     New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue).Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue).Id
     $params = @{
         action = "lockForApproval"
     }
@@ -365,7 +367,7 @@ function CreateGDAPSROnly(){
     }
     New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue).Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue).Id
     $params = @{
         action = "lockForApproval"
     }
@@ -417,7 +419,7 @@ function CreateGDAPTCaaS(){
     }
     New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue).Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue).Id
     $params = @{
         action = "lockForApproval"
     }
@@ -457,7 +459,7 @@ function CreateGDAPTCaaS(){
     }
     New-MgBetaTenantRelationshipDelegatedAdminRelationship -BodyParameter $params | Out-Null
 
-    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue).Id
+    $delegatedAdminRelationshipId = (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue).Id
     $params = @{
         action = "lockForApproval"
     }
@@ -526,7 +528,7 @@ function CreateGDAPTCaaS(){
         $name = "GDAP_$($year)_TDA_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         
-        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
             Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
             Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
             }else{   
@@ -574,7 +576,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_EndUser_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     
-    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -637,7 +639,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_1stLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -705,7 +707,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+    if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -789,7 +791,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_3rdLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -885,7 +887,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_PS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -967,7 +969,7 @@ function CreateGDAPM365Managed(){
     $name = "GDAP_$($year)_GA_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
-        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
+        if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
         Write-Host "`nAdmin Relationship '$($AdminRelationshipName)' already exists, Skipping" -ForegroundColor Yellow
         Write-Log -Message "Admin Relationship '$($AdminRelationshipName)' Already Exists" -Severity "Warning" -Process "$($customer.Name)" -Object "$($AdminRelationshipName)"
         }else{
@@ -1009,7 +1011,7 @@ function AssignGDAPSROnly(){
         
         $name = "GDAP_$($year)_SROnly_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
+        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
         $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
@@ -1171,7 +1173,7 @@ function AssignGDAPTCaaS(){
         
         $name = "GDAP_$($year)_CSOC_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
+        $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
         $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
     
@@ -1401,7 +1403,7 @@ function AssignGDAPM365Managed(){
     
     $name = "GDAP_$($year)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
-    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
+    $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
     $relassignment = Get-MgBetaTenantRelationshipDelegatedAdminRelationshipAccessAssignment -DelegatedAdminRelationshipId $($delegatedAdminRelationshipId)
 
