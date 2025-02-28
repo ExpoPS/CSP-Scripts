@@ -477,7 +477,8 @@ function CreateGDAPTCaaS(){
     function CreateGDAPCSOC(){
 
         #CSOC
-        ## Security Reader
+        ## Global Reader
+        ## Service Support Administrator
     
         Write-Progress -Activity "Creating Admin Relationship" -Status "Creating CSOC Admin Relationship" -PercentComplete 0
         
@@ -500,7 +501,9 @@ function CreateGDAPTCaaS(){
                     @{
                         roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
                     }
-
+                    @{
+                        roleDefinitionId = "f023fd81-a637-4b56-95fd-791ac0226033"
+                    }
                 )
             }
             autoExtendDuration = "P180D"
@@ -1166,9 +1169,8 @@ function AssignGDAPTCaaS(){
     function AssignGDAPCSOC(){
 
         #CSOC
-        ## License administrator
+        ## Global Reader
         ## Service support administrator
-        ## Teams Administrator
     
         Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning CSOC Admin Relationship" -PercentComplete 50
         
@@ -1191,6 +1193,9 @@ function AssignGDAPTCaaS(){
                 unifiedRoles = @(
                     @{
                         roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
+                    }
+                    @{
+                        roleDefinitionId = "f023fd81-a637-4b56-95fd-791ac0226033"
                     }
                 )
             }
