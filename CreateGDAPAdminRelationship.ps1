@@ -15,13 +15,15 @@ V1.4, 16/01/2025 Added Extra Permissions
 V1.5, 06/02/2025 Improved Module Checks
 V1.6, 20/02/2025 Fixed Module Checks
 V1.7, 27/02/2025 Added Global Reader
+V1.8, 06/03/2025 Added Reports Reader
+
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2025"
-$script:version = "1.7"
+$script:version = "1.8"
 
 
 #Check Temp Folder Exists
@@ -575,6 +577,8 @@ function CreateGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        ##Reports Reader
+
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating End User Admin Relationship" -PercentComplete 15
     
     $name = "$($year)_EndUser_$($customer.Name.replace(' ',''))"
@@ -614,6 +618,9 @@ function CreateGDAPM365Managed(){
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
+                @{
+                    roleDefinitionId = "4a5d8f65-41da-4de4-8968-e035b65339cf"
+                }
             )
         }
         autoExtendDuration = "P180D"
@@ -637,6 +644,7 @@ function CreateGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        ##Reports Reader
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 1st Line Admin Relationship" -PercentComplete 30
     
@@ -676,6 +684,9 @@ function CreateGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
+                @{
+                    roleDefinitionId = "4a5d8f65-41da-4de4-8968-e035b65339cf"
                 }
             )
         }
@@ -1284,6 +1295,7 @@ function AssignGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        ##Reports Reader
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning End User Admin Relationship" -PercentComplete 15
     
@@ -1325,6 +1337,9 @@ function AssignGDAPM365Managed(){
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
                 }
+                @{
+                    roleDefinitionId = "4a5d8f65-41da-4de4-8968-e035b65339cf"
+                }
             )
         }
     }
@@ -1342,6 +1357,7 @@ function AssignGDAPM365Managed(){
         ##User Administrator
         ##Authentication Administrator
         ##Helpdesk Administrator
+        ##Reports Reader
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 1st Line Admin Relationship" -PercentComplete 30
     
@@ -1382,6 +1398,9 @@ function AssignGDAPM365Managed(){
                 }
                 @{
                     roleDefinitionId = "729827e3-9c14-49f7-bb1b-9608f156bbb8"
+                }
+                @{
+                    roleDefinitionId = "4a5d8f65-41da-4de4-8968-e035b65339cf"
                 }
             )
         }
