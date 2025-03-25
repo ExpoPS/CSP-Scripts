@@ -16,6 +16,7 @@ V1.5, 06/02/2025 Improved Module Checks
 V1.6, 20/02/2025 Fixed Module Checks
 V1.7, 27/02/2025 Added Global Reader
 V1.8, 06/03/2025 Added Reports Reader
+V1.9, 25/03/2025 Added Security Admin for CSOC
 
 NEEDS - 
 
@@ -23,7 +24,7 @@ NEEDS -
 
 $script:logpath = "C:\Temp\GDAP"
 $script:year = "2025"
-$script:version = "1.8"
+$script:version = "1.9"
 
 
 #Check Temp Folder Exists
@@ -502,6 +503,9 @@ function CreateGDAPTCaaS(){
                 unifiedRoles = @(
                     @{
                         roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
+                    }
+                    @{
+                        roleDefinitionId = "194ae4cb-b126-40b2-bd5b-6091b380977d"
                     }
                     @{
                         roleDefinitionId = "f023fd81-a637-4b56-95fd-791ac0226033"
@@ -1204,6 +1208,9 @@ function AssignGDAPTCaaS(){
                 unifiedRoles = @(
                     @{
                         roleDefinitionId = "f2ef992c-3afb-46b9-b7cf-a126ee74c451"
+                    }
+                    @{
+                        roleDefinitionId = "194ae4cb-b126-40b2-bd5b-6091b380977d"
                     }
                     @{
                         roleDefinitionId = "f023fd81-a637-4b56-95fd-791ac0226033"
