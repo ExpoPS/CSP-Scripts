@@ -42,8 +42,8 @@ function ConnectModules(){
     try {$Module = Get-MgContext -ErrorAction SilentlyContinue}
     catch {}
     If ($Module){Write-Host "`nMicrosoft.Graph.Beta.Identity.Partner is already connected for $($Module.Account)" -ForegroundColor Green}
-    ElseIf (!$Module){$Mod = Get-ChildItem -Path "$DocsPath\WindowsPowerShell\Modules\*" -Directory 
-}
+    ElseIf (!$Module){
+    $Mod = Get-ChildItem -Path "$DocsPath\WindowsPowerShell\Modules\*" -Directory 
     Write-Host "`nNot connected to Microsoft.Graph.Beta.Identity.Partner, Connecting..." -ForegroundColor Yellow
     If (($Mod.Name -notcontains "Microsoft.Graph.Beta.Identity.Partner") -or ($Mod.Name -notcontains "Microsoft.Graph.Groups") -or ($Mod.Name -notcontains "Microsoft.Graph.Authentication"))
     {
@@ -56,6 +56,7 @@ function ConnectModules(){
     }elseif ($Mod.Name -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
         Import-Module "$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Authentication"
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
+            }
         }ElseIf($Module){}
     
     
@@ -77,10 +78,10 @@ function ConnectModules(){
         Import-Module "$DocsPath\WindowsPowerShell\Modules\PartnerCenter" -ErrorAction SilentlyContinue
         Connect-PartnerCenter
             }
+        }    
+    
     Start-Sleep -Seconds 3
-        }  
-    }  
-
+}
 function LoadMainMenuSystem(){
     do{
 	[INT]$xMenu1 = 0
