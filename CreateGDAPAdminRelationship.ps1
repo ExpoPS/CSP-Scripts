@@ -56,7 +56,6 @@ function ConnectModules(){
     }elseif ($Mod.Name -eq "Microsoft.Graph.Beta.Identity.Partner" -and "Microsoft.Graph.Groups" -and "Microsoft.Graph.Authentication") {
         Import-Module "$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Beta.Identity.Partner","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Groups","$DocsPath\WindowsPowerShell\Modules\Microsoft.Graph.Authentication"
         Connect-MgGraph -Scopes "DelegatedAdminRelationship.ReadWrite.All,GroupMember.Read.All" -Verbose -NoWelcome
-            }
         }ElseIf($Module){}
     
     
@@ -79,7 +78,8 @@ function ConnectModules(){
         Connect-PartnerCenter
             }
     Start-Sleep -Seconds 3
-        }    
+        }  
+    }  
 
 function LoadMainMenuSystem(){
     do{
