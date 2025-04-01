@@ -65,9 +65,9 @@ function ConnectModules(){
     catch {}
     If ($Module2){Write-Host "`nPartnerCenter is already connected for $($Module2.CompanyName)" -ForegroundColor Green}
     If (!$Module2){
-    $Mod = Get-InstalledModule -Name "PartnerCenter"
+    $Mod2 = Get-ChildItem -Path "$DocsPath\WindowsPowerShell\Modules\PartnerCenter" -Directory 
     Write-Host "`nNot connected to PartnerCenter, Connecting..." -ForegroundColor Yellow
-    If (!$Mod)
+    If (!$Mod2)
     {
         Write-Host "`nPartnerCenter Module is not present, attempting to install it"
         
