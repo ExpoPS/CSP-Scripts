@@ -17,14 +17,15 @@ V1.6, 20/02/2025 Fixed Module Checks
 V1.7, 27/02/2025 Added Global Reader
 V1.8, 06/03/2025 Added Reports Reader
 V1.9, 25/03/2025 Added Security Admin for CSOC
+V2.0, 15/05/2025 Added month to date generation.
 
 NEEDS - 
 
 #>
 
 $script:logpath = "C:\Temp\GDAP"
-$script:year = "2025"
-$script:version = "1.9"
+$script:date = (Get-Date).ToString("yyyyMM")
+$script:version = "2.0"
 
 
 #Check Temp Folder Exists
@@ -298,7 +299,7 @@ function CreateGDAPSROnly(){
     ## Service Support Administrator
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating SR Only Admin Relationship" -PercentComplete 50
     
-    $name = "$($year)_SROnly_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_SROnly_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
     try {
@@ -346,7 +347,7 @@ function CreateGDAPSROnly(){
     ## Billing Administrator
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Billing Admin Admin Relationship" -PercentComplete 50
     
-    $name = "$($year)_BillingAdmin_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_BillingAdmin_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
@@ -392,7 +393,7 @@ function CreateGDAPTCaaS(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating TCaaS Admin Relationship" -PercentComplete 0
     
-    $name = "$($year)_TCaaS_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_TCaaS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
  
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
@@ -438,7 +439,7 @@ function CreateGDAPTCaaS(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating UC TCaaS Admin Relationship" -PercentComplete 50
     
-    $name = "$($year)_UCTeam_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_UCTeam_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
@@ -485,7 +486,7 @@ function CreateGDAPTCaaS(){
     
         Write-Progress -Activity "Creating Admin Relationship" -Status "Creating CSOC Admin Relationship" -PercentComplete 0
         
-        $name = "$($year)_CSOC_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_CSOC_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
      
         if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue){
@@ -535,7 +536,7 @@ function CreateGDAPTCaaS(){
     
         Write-Progress -Activity "Creating Admin Relationship" -Status "Creating TDA Admin Relationship" -PercentComplete 0
         
-        $name = "$($year)_TDA_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_TDA_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         
         if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -585,7 +586,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating End User Admin Relationship" -PercentComplete 15
     
-    $name = "$($year)_EndUser_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_EndUser_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -652,7 +653,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 1st Line Admin Relationship" -PercentComplete 30
     
-    $name = "$($year)_1stLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_1stLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -723,7 +724,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 2nd Line Admin Relationship" -PercentComplete 45
     
-    $name = "$($year)_2ndLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
     if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -807,7 +808,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating 3rd Line Admin Relationship" -PercentComplete 60
     
-    $name = "$($year)_3rdLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_3rdLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
         if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -903,7 +904,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Professional Service Admin Relationship" -PercentComplete 75
     
-    $name = "$($year)_PS_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_PS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
         if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -985,7 +986,7 @@ function CreateGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Global Admin Admin Relationship" -PercentComplete 90
     
-    $name = "$($year)_GA_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_GA_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
 
         if (Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue){
@@ -1028,7 +1029,7 @@ function AssignGDAPSROnly(){
         ## Service Support Administrator
         Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning SR Only Admin Relationship" -PercentComplete 50
         
-        $name = "$($year)_SROnly_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_SROnly_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
@@ -1067,7 +1068,7 @@ function AssignBillingAdmin(){
         ## Billing Administrator
         Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning Billing Admin Admin Relationship" -PercentComplete 50
         
-        $name = "$($year)_BillingAdmin_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_BillingAdmin_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
@@ -1108,7 +1109,7 @@ function AssignGDAPTCaaS(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning TCaaS Admin Relationship" -PercentComplete 50
     
-    $name = "$($year)_TCaaS_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_TCaaS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1148,7 +1149,7 @@ function AssignGDAPTCaaS(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating UC TCaaS Admin Relationship" -PercentComplete 50
     
-    $name = "$($year)_UCTeam_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_UCTeam_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1185,11 +1186,12 @@ function AssignGDAPTCaaS(){
 
         #CSOC
         ## Global Reader
+        ## Security Administrator
         ## Service support administrator
     
         Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning CSOC Admin Relationship" -PercentComplete 50
         
-        $name = "$($year)_CSOC_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_CSOC_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
@@ -1233,7 +1235,7 @@ function AssignGDAPTCaaS(){
 
         Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning TDA Admin Relationship" -PercentComplete 50
         
-        $name = "$($year)_TDA_$($customer.Name.replace(' ',''))"
+        $name = "$($date)_TDA_$($customer.Name.replace(' ',''))"
         $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
         $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
         $delegatedAdminRelationshipId = $rel.id
@@ -1306,7 +1308,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning End User Admin Relationship" -PercentComplete 15
     
-    $name = "$($year)_EndUser_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_EndUser_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1368,7 +1370,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 1st Line Admin Relationship" -PercentComplete 30
     
-    $name = "$($year)_1stLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_1stLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1433,7 +1435,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 2nd Line Admin Relationship" -PercentComplete 45
     
-    $name = "$($year)_2ndLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_2ndLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "Customer/TenantId eq '$($customer.CustomerId)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1511,7 +1513,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning 3rd Line Admin Relationship" -PercentComplete 60
     
-    $name = "$($year)_3rdLine_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_3rdLine_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1602,7 +1604,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Creating Admin Relationship" -Status "Creating Professional Service Admin Relationship" -PercentComplete 75
     
-    $name = "$($year)_PS_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_PS_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
@@ -1679,7 +1681,7 @@ function AssignGDAPM365Managed(){
 
     Write-Progress -Activity "Assigning Admin Relationship" -Status "Assigning Global Admin Admin Relationship" -PercentComplete 90
     
-    $name = "$($year)_GA_$($customer.Name.replace(' ',''))"
+    $name = "$($date)_GA_$($customer.Name.replace(' ',''))"
     $AdminRelationshipName = $name.subString(0, [System.Math]::Min(50, $name.Length))
     $rel = Get-MgBetaTenantRelationshipDelegatedAdminRelationship -Filter "DisplayName eq '$($AdminRelationshipName)'" -ErrorAction SilentlyContinue
     $delegatedAdminRelationshipId = $rel.id
